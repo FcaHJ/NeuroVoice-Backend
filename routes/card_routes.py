@@ -1,30 +1,34 @@
 from flask import Blueprint, request, jsonify
-from app import db
+from models import db
 from models.card import Card
 from models.collection import Collection
+from flask_cors import cross_origin
+
 
 card_routes = Blueprint("card_routes", __name__)
 
 @card_routes.get("/")
+@cross_origin()
 def get_cards():
     cards = Card.query.all()
     return jsonify([c.to_dict() for c in cards]), 200
 
 @card_routes.get("/<int:id>")
+@cross_origin()
 def get_card(id):
     card = Card.query.get(id)
     if not card:
         return jsonify({"error": "Card not found"}), 404
     return jsonify(card.to_dict()), 200
 
-@card_routes.post("/")
+@card_routes.post("/cards")
+@cross_origin()
 def create_card():
-    data = request.json or {}
-    # permitimos que venga collection_id o no
+    data = request.json
     card = Card(
-        title=data.get("title"),
+        name=data["name"],
+        type=data["type"],
         description=data.get("description"),
-        image=data.get("image"),
         collection_id=data.get("collection_id")
     )
     db.session.add(card)
@@ -32,13 +36,14 @@ def create_card():
     return jsonify(card.to_dict()), 201
 
 @card_routes.put("/<int:id>")
+@cross_origin()
 def update_card(id):
     data = request.json or {}
     card = Card.query.get(id)
     if not card:
         return jsonify({"error": "Card not found"}), 404
 
-    card.title = data.get("title", card.title)
+    card.name = data.get("name", card.name)
     card.description = data.get("description", card.description)
     card.image = data.get("image", card.image)
     # permitir cambiar colección
@@ -48,6 +53,7 @@ def update_card(id):
     return jsonify(card.to_dict()), 200
 
 @card_routes.delete("/<int:id>")
+@cross_origin()
 def delete_card(id):
     card = Card.query.get(id)
     if not card:
@@ -55,3 +61,19 @@ def delete_card(id):
     db.session.delete(card)
     db.session.commit()
     return jsonify({"message": "Card deleted"}), 200
+
+
+@card_routes.put("/<int:id>/fav")
+@cross_origin()
+def toggle_fav(id):
+    data = request.json or {}
+    card = Card.query.get(id)
+
+    if not card:
+        return jsonify({"error": "Card not found"}), 404
+
+    # Actualizar favorito
+    card.fav = data.get("fav", card.fav)
+
+    db.session.commit()
+    return jsonify(card.to_dict()), 200
