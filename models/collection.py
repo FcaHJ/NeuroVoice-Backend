@@ -2,7 +2,7 @@ from . import db
 
 class Collection(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(200))
+    name = db.Column(db.String(200), unique=True, nullable=False)
     max_cards = db.Column(db.Integer)
     cards = db.relationship("Card", backref="collection", cascade="all, delete")
 

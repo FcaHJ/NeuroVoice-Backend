@@ -25,6 +25,10 @@ def get_collection(id):
 @cross_origin()
 def create_collection():
     data = request.json or {}
+
+    existing = Collection.query.filter_by(name=data.get("name")).first()
+    if existing:
+        return jsonify({"error": "Ya existe una colección con ese nombre"}), 400
     col = Collection(
         name=data.get("name"),
         max_cards=data.get("max_cards", 5)
