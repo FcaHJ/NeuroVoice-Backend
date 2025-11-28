@@ -63,6 +63,10 @@ def delete_collection(id):
 @collection_routes.post("/<int:id>/add/<int:card_id>")
 @cross_origin()
 def add_card_to_collection(id, card_id):
+    data = request.json or {}
+
+    position = data.get("position") 
+
     col = Collection.query.get(id)
     if not col:
         return jsonify({"error": "Collection not found"}), 404
